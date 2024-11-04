@@ -49,7 +49,7 @@ def handle_client(client_socket):
 
             response = "-Error: Unsupported command\r\n"
             if command == 'ECHO':
-                response = f"${len(command)}\r\n{command}\r\n"
+                response = f"${len(args)}\r\n{args}\r\n"
             elif command == 'PING':
                 response = "+PONG\r\n"
 
