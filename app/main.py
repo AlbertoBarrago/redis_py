@@ -5,7 +5,6 @@ import threading
 
 def parse_request(data, encoding="utf-8"):
     separator = "\r\n"
-    # Simple String response should start with "+"
     encoded = f"+{data}{separator}"
     print(f"encoded: {encoded}")
     return encoded.encode(encoding=encoding)
@@ -27,7 +26,7 @@ def handle_client(client_socket):
 
             print(f"Elements: {elements}")
 
-            command = elements[1].decode('utf-8')
+            command = elements[2].decode('utf-8')
             print(f"Command: {command}")
 
             if command == "PING":
@@ -35,7 +34,7 @@ def handle_client(client_socket):
                 print(f"Sending PONG response -> {resp}")
                 client_socket.sendall(resp)
             elif command == "ECHO":
-                message = elements[3].decode("utf-8")
+                message = elements[4].decode("utf-8")
                 resp = parse_request(message)
                 print(f"Response sent {resp}")
                 client_socket.sendall(resp)
