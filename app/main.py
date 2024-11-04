@@ -2,11 +2,12 @@ import socket
 import threading
 from app.global_store import GlobalStore
 
-# Inizializzazione del GlobalStore per coppie chiave-valore e tempi di scadenza
 store = GlobalStore()
 
 
 def parse_request(data, encoding="utf-8"):
+    if data == b"$-1\r\n":
+        return data
     separator = "\r\n"
     encoded = f"+{data}{separator}"
     print(f"encoded: {encoded}")
