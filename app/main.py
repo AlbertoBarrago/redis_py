@@ -1,7 +1,7 @@
 import socket
 import threading
 
-from app.services.request_service import RequestService
+from app.services.request_handling import RequestService
 from app.store.global_store import GlobalStore
 
 store = GlobalStore()

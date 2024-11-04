@@ -1,9 +1,11 @@
 class RequestService:
-    def __init__(self, data=None, encoding="utf-8", store=None):
+    def __init__(self, data=None, encoding="utf-8", store=None, dir_path=None, dbfilename=None):
         self.data = data
         self.encoding = encoding
         self.running = True
         self.store = store
+        self.dir_path = dir_path
+        self.dbfilename = dbfilename
 
     def parse_request(self, data):
         separator = "\r\n"
@@ -12,7 +14,6 @@ class RequestService:
         elif isinstance(data, bytes):
             return data
         else:
-            # Assume data is an integer for bulk strings
             return f"${len(data)}{separator}{data}{separator}".encode(self.encoding)
 
     def handle_client(self, client_socket):
@@ -73,6 +74,21 @@ class RequestService:
                         resp = self.parse_request(b"$-1\r\n")
                         client_socket.sendall(resp)
                         print(f"Key '{key}' not found or expired, sending null bulk string")
+                elif command == "CONFIG" and elements[2].decode('utf-8').upper() == "GET":
+                    if len(elements) < 4:
+                        error_resp = self.parse_request("ERROR Missing parameter for CONFIG GET")
+                        client_socket.sendall(error_resp)
+                        continue
+                    config_param = elements[3].decode('utf-8')
+
+                    if config_param == "dir":
+                        resp = f"$3\r\n{self.dir}\r\n"
+                    elif config_param == "dbfilename":
+                        resp = f"${len(self.dbfilename)}\r\n{self.dbfilename}\r\n"
+                    else:
+                        resp = "$-1\r\n"
+
+                    client_socket.sendall(resp.encode('utf-8'))
                 else:
                     error_resp = self.parse_request("ERROR Unsupported command")
                     client_socket.sendall(error_resp)
