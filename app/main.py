@@ -69,7 +69,8 @@ def handle_client(client_socket):
                     resp = parse_request(value)
                     print(f"Sending stored value {value}")
                 else:
-                    resp = parse_request("null bulk string")
+                    resp = b"$-1\r\n"
+                    print(f"Key '{key}' not found or expired, sending null bulk string")
                 client_socket.sendall(resp)
             else:
                 print("Unsupported command")

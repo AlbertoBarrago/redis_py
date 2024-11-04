@@ -10,14 +10,13 @@ class GlobalStore:
         print(f"Set key '{key}' to value '{value}' with expiration time {expiration_time}")
 
     def get_elements_by_key(self, key):
-        # Check if key exists
         if key not in self.elements:
             return None
 
         value, expiration_time = self.elements[key]
 
         if expiration_time and time.time() > expiration_time:
-            print(f"Key '{key}' has expired")
+            print(f"Key '{key}' has expired, deleting from store.")
             del self.elements[key]
             return None
 
