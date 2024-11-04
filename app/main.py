@@ -12,6 +12,7 @@ def parse_request(data, encoding="utf-8"):
 
 def handle_client(client_socket):
     running = True
+    elements_stored = None
     try:
         while running:
             data = client_socket.recv(1024)
@@ -38,6 +39,21 @@ def handle_client(client_socket):
                 resp = parse_request(message)
                 print(f"Response sent {resp}")
                 client_socket.sendall(resp)
+            elif command == "SET":
+                key = elements[4].decode("utf-8")
+                value = elements[6].decode("utf-8")
+                print(f"Setting key {key} to value {value}")
+                elements_stored = (key, value)
+                resp = parse_request("OK")
+                client_socket.sendall(resp)
+            elif command == "GET":
+                key = elements[4].decode("utf-8")
+                print(f"Getting key {key}")
+                if elements_stored and elements_stored[0] == key:
+                    resp = parse_request(elements_stored[1])
+                    print(f"Sending stored value {elements_stored[1]}")
+                    client_socket.sendall(resp)
+
             else:
                 print("Unsupported command")
                 error_resp = parse_request("ERROR Unsupported command")
