@@ -5,29 +5,10 @@ from urllib.parse import urlparse, parse_qs  # noqa: F401
 
 
 def parse_request(request: str):
-    lines = request.split('\r\n')
-
-    if len(lines) < 5:
-        raise ValueError('Invalid request format: insufficient lines')
-
-    try:
-        if lines[0] != '*2':
-            raise ValueError('Invalid request format: incorrect command count prefix')
-
-        command = str(lines[2])
-
-        if not lines[4]:
-            raise ValueError('Invalid argument length prefix')
-        argument_length = len(lines[4])
-
-        argument = lines[4]
-        if len(argument) != argument_length:
-            raise ValueError('Invalid argument length')
-
-        return command, argument
-
-    except (IndexError, ValueError) as e:
-        raise ValueError(f'Invalid request format: {e}') from e
+    parts = request.split()
+    command = parts[0]
+    args = ' '.join(parts[1:])
+    return command, args
 
 
 def handle_client(client_socket):
