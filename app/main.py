@@ -1,15 +1,44 @@
+""" Redi from scratch -> https://app.codecrafters.io/ """
 import socket  # noqa: F401
 import threading  # noqa: F401
 
 
+def parse_request(request):
+    """
+    Parse request, handle correct commands and parse arguments.
+    :param request:
+    :return:
+    """
+    parts = request.split("\r\n")
+    if not parts[0].startswith("*"):
+        return None
+
+    num_elements = int(parts[0][1:])
+    command = parts[2]
+    args = parts[4] if num_elements > 1 else None
+
+    return command, args
+
 def handle_client(client_socket):
+    """
+    Handle client request, parsing response and sending it back.
+    :param client_socket:
+    :return:
+    """
     try:
         while True:
             request = client_socket.recv(1024).decode("utf-8")
             if not request:
                 break
             print(f"Received request: {request}")
-            response = "+PONG\r\n"
+
+
+            command, args = parse_request(request)
+            if command == "ECHO":
+                response = f"${len(args)}\r\n{args}\r\n"
+                print(f"Echoing response: {response}")
+            else:
+                response = "-Error: Unsupported command\r\n"
             client_socket.sendall(response.encode("utf-8"))
             print(f"Sent response: {response}")
     except ConnectionResetError:
@@ -18,6 +47,10 @@ def handle_client(client_socket):
         client_socket.close()
 
 def main():
+    """
+    Main function
+    :return:
+    """
     server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
     print("Server started on localhost:6379")
     try:
