@@ -6,10 +6,15 @@ from app.store.global_store import GlobalStore
 
 store = GlobalStore()
 
+
 def main():
-    server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
-    request_service = RequestService(store=store)
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server_socket.bind(("localhost", 6379))
+    server_socket.listen()
     print("Server started on localhost:6379")
+
+    request_service = RequestService(store=store)
     try:
         while True:
             client_socket, addr = server_socket.accept()
