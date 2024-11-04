@@ -1,8 +1,15 @@
+""" Redi from scratch -> https://app.codecrafters.io/ """
 import socket  # noqa: F401
 import threading  # noqa: F401
 
 
 def parse_request(data, encoding="utf-8"):
+    """
+     Doc -> https://redis.io/docs/latest/develop/reference/protocol-spec/#bulk-strings
+    :param data:
+    :param encoding:
+    :return:
+    """
     if not isinstance(data, list):
         data = [data]
 
@@ -36,6 +43,8 @@ def handle_client(client_socket):
 
             print("Received {!r}".format(data))
             arr_size, *arr = [el for el in data.split(b"\r\n") if el]
+            if not arr:
+                continue
             print(f"Array size: {arr_size}")
             print(f"Array content: {arr}")
 
@@ -44,7 +53,6 @@ def handle_client(client_socket):
                 print(f"Sending PONG response -> {resp}")
                 client_socket.sendall(resp)
             elif arr[0] == b"ECHO":
-                # Decodifica e prepara i dati per l'eco
                 resp = parse_request([el.decode("utf-8") for el in arr[1:]])
                 print(f"Response sent {resp}")
                 client_socket.sendall(resp)
