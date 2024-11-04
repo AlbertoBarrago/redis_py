@@ -1,23 +1,34 @@
 """ Redi from scratch -> https://app.codecrafters.io/ """
 import socket  # noqa: F401
 import threading  # noqa: F401
+from urllib.parse import urlparse, parse_qs  # noqa: F401
 
 
-def parse_request(request):
-    """
-    Parse request, handle correct commands and parse arguments.
-    :param request:
-    :return:
-    """
-    parts = request.split("\r\n")
-    if not parts[0].startswith("*"):
-        return None
+def parse_request(request: str):
+    lines = request.split('\r\n')
 
-    num_elements = int(parts[0][1:])
-    command = parts[2]
-    args = parts[4] if num_elements > 1 else None
+    if len(lines) < 5:
+        raise ValueError('Invalid request format: insufficient lines')
 
-    return command, args
+    try:
+        if lines[0] != '*2':
+            raise ValueError('Invalid request format: incorrect command count prefix')
+
+        command = str(lines[2])
+
+        if not lines[4]:
+            raise ValueError('Invalid argument length prefix')
+        argument_length = len(lines[4])
+
+        argument = lines[4]
+        if len(argument) != argument_length:
+            raise ValueError('Invalid argument length')
+
+        return command, argument
+
+    except (IndexError, ValueError) as e:
+        raise ValueError(f'Invalid request format: {e}') from e
+
 
 def handle_client(client_socket):
     """
@@ -28,25 +39,28 @@ def handle_client(client_socket):
     try:
         while True:
             request = client_socket.recv(1024).decode("utf-8")
+
             if not request:
                 break
-            print(f"Received request: {request}")
-
+            # print(f"Received request: {request}")
 
             command, args = parse_request(request)
-            if command == "ECHO":
+            print(f"Received request: {command}, args: {args}")
+
+            if command == 'ECHO':
                 response = f"${len(args)}\r\n{args}\r\n"
-                print(f"Echoing response: {response}")
-            if command == "PING":
+            elif command == 'PING':
                 response = "+PONG\r\n"
             else:
                 response = "-Error: Unsupported command\r\n"
+
             client_socket.sendall(response.encode("utf-8"))
             print(f"Sent response: {response}")
     except ConnectionResetError:
         print("Client disconnected")
     finally:
         client_socket.close()
+
 
 def main():
     """
@@ -65,7 +79,6 @@ def main():
         print("Shutting down server")
     finally:
         server_socket.close()
-
 
 
 if __name__ == "__main__":
