@@ -5,10 +5,29 @@ from urllib.parse import urlparse, parse_qs  # noqa: F401
 
 
 def parse_request(request: str):
-    parts = request.split()
-    command = parts[0]
-    args = ' '.join(parts[1:])
-    return command, args
+    lines = request.split('\r\n')
+
+    if len(lines) < 5:
+        raise ValueError('Invalid request format: insufficient lines')
+
+    try:
+        if lines[0] != '*2':
+            raise ValueError('Invalid request format: incorrect command count prefix')
+
+        command = str(lines[2])
+
+        if not lines[4]:
+            raise ValueError('Invalid argument length prefix')
+        argument_length = len(lines[4])
+
+        argument = lines[4]
+        if len(argument) != argument_length:
+            raise ValueError('Invalid argument length')
+
+        return command, argument
+
+    except (IndexError, ValueError) as e:
+        raise ValueError(f'Invalid request format: {e}') from e
 
 
 def handle_client(client_socket):
@@ -28,12 +47,12 @@ def handle_client(client_socket):
             command, args = parse_request(request)
             print(f"Received request: {command}, args: {args}")
 
+            response = "-Error: Unsupported command\r\n"
             if command == 'ECHO':
-                response = f"${len(args)}\r\n{args}\r\n"
+                response = f"${len(command)}\r\n{command}\r\n"
             elif command == 'PING':
                 response = "+PONG\r\n"
-            else:
-                response = "-Error: Unsupported command\r\n"
+
 
             client_socket.sendall(response.encode("utf-8"))
             print(f"Sent response: {response}")
