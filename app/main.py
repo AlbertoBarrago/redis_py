@@ -58,14 +58,9 @@ def handle_client(client_socket):
             elif command == "GET":
                 key = elements[4].decode("utf-8")
                 print(f"Getting key {key}")
-                value, expiration_time = store.get_elements_by_key(key)
 
-                # Check if the key has expired
-                if expiration_time is not None and time.time() > expiration_time:
-                    print(f"Key {key} has expired")
-                    del store.elements[key]  # Remove expired key
-                    resp = parse_request("null bulk string")
-                elif value is not None:
+                value = store.get_elements_by_key(key)
+                if value is not None:
                     resp = parse_request(value)
                     print(f"Sending stored value {value}")
                 else:
