@@ -5,11 +5,13 @@ from app.global_store import GlobalStore
 # Inizializzazione del GlobalStore per coppie chiave-valore e tempi di scadenza
 store = GlobalStore()
 
+
 def parse_request(data, encoding="utf-8"):
     separator = "\r\n"
     encoded = f"+{data}{separator}"
     print(f"encoded: {encoded}")
     return encoded.encode(encoding=encoding)
+
 
 def handle_client(client_socket):
     running = True
@@ -43,17 +45,25 @@ def handle_client(client_socket):
                 key = elements[4].decode("utf-8")
                 value = elements[6].decode("utf-8")
                 expiration = None
-                if len(elements) > 8 and elements[8] == b'EX':
-                    expiration = int(elements[9].decode("utf-8"))
-                    print(f"Setting key {key} to value {value} with expiration of {expiration} seconds")
 
-                store.set_elements(key, value, expiration)
+                # Controlla se EX o PX è presente nel comando
+                if len(elements) > 8:
+                    if elements[8] == b'EX':
+                        expiration = int(elements[10].decode("utf-8")) * 1000  # Converti EX in ms
+                    elif elements[8] == b'PX':
+                        expiration = int(elements[10].decode("utf-8"))  # PX è già in ms
+
+                    print(f"Setting key '{key}' to value '{value}' with expiration of {expiration} ms")
+
+                # Usa il metodo `set_elements` per salvare il valore con l'expiration in secondi (convertiti da ms)
+                store.set_elements(key, value, expiration / 1000 if expiration else None)
                 resp = parse_request("OK")
                 client_socket.sendall(resp)
             elif command == "GET":
                 key = elements[4].decode("utf-8")
                 print(f"Getting key {key}")
 
+                # Usa il metodo `get_elements_by_key` per ottenere il valore e gestire l'expiration
                 value = store.get_elements_by_key(key)
                 if value is not None:
                     resp = parse_request(value)
@@ -77,6 +87,7 @@ def handle_client(client_socket):
         except OSError as e:
             print(f"Error closing socket: {e}")
 
+
 def main():
     server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
     print("Server started on localhost:6379")
@@ -89,6 +100,7 @@ def main():
         print("Shutting down server")
     finally:
         server_socket.close()
+
 
 if __name__ == "__main__":
     main()
