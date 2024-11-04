@@ -48,10 +48,10 @@ def handle_client(client_socket):
 
                 # Controlla se EX o PX è presente nel comando
                 if len(elements) > 8:
-                    if elements[8] == b'EX':
-                        expiration = int(elements[10].decode("utf-8")) * 1000  # Converti EX in ms
-                    elif elements[8] == b'PX':
-                        expiration = int(elements[10].decode("utf-8"))  # PX è già in ms
+                    if elements[8] == b'ex':
+                        expiration = int(elements[10].decode("utf-8")) * 1000
+                    elif elements[8] == b'px':
+                        expiration = int(elements[10])
 
                     print(f"Setting key '{key}' to value '{value}' with expiration of {expiration} ms")
 
@@ -69,9 +69,8 @@ def handle_client(client_socket):
                     resp = parse_request(value)
                     print(f"Sending stored value {value}")
                 else:
-                    resp = b"$-1\r\n"
                     print(f"Key '{key}' not found or expired, sending null bulk string")
-                client_socket.sendall(resp)
+                    client_socket.sendall("$-1\r\n")
             else:
                 print("Unsupported command")
                 error_resp = parse_request("ERROR Unsupported command")
