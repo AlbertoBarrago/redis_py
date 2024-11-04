@@ -1,10 +1,8 @@
 import socket
 import threading
-import time
-
 from app.global_store import GlobalStore
 
-# Global store for key-value pairs and their expiration times
+# Inizializzazione del GlobalStore per coppie chiave-valore e tempi di scadenza
 store = GlobalStore()
 
 def parse_request(data, encoding="utf-8"):
@@ -44,28 +42,20 @@ def handle_client(client_socket):
             elif command == "SET":
                 key = elements[4].decode("utf-8")
                 value = elements[6].decode("utf-8")
+                expiration = None
                 if len(elements) > 8 and elements[8] == b'EX':
                     expiration = int(elements[9].decode("utf-8"))
                     print(f"Setting key {key} to value {value} with expiration of {expiration} seconds")
-                    expiration_time = time.time() + expiration
-                else:
-                    print(f"Setting key {key} to value {value} without expiration")
-                    expiration_time = None
 
-                store.set_elements(value, expiration_time)
+                store.set_elements(key, value, expiration)
                 resp = parse_request("OK")
                 client_socket.sendall(resp)
             elif command == "GET":
                 key = elements[4].decode("utf-8")
                 print(f"Getting key {key}")
-                value, expiration_time = store.get_elements_by_key(key)
 
-                # Check if the key has expired
-                if expiration_time is not None and time.time() > expiration_time:
-                    print(f"Key {key} has expired")
-                    del store.elements[key]  # Remove expired key
-                    resp = parse_request("null bulk string")
-                elif value is not None:
+                value = store.get_elements_by_key(key)
+                if value is not None:
                     resp = parse_request(value)
                     print(f"Sending stored value {value}")
                 else:
