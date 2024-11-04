@@ -37,6 +37,8 @@ def handle_client(client_socket):
             if command == "ECHO":
                 response = f"${len(args)}\r\n{args}\r\n"
                 print(f"Echoing response: {response}")
+            if command == "PING":
+                response = "+PONG\r\n"
             else:
                 response = "-Error: Unsupported command\r\n"
             client_socket.sendall(response.encode("utf-8"))
