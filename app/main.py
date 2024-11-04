@@ -4,12 +4,6 @@ import threading  # noqa: F401
 
 
 def parse_request(data, encoding="utf-8"):
-    """
-     Doc -> https://redis.io/docs/latest/develop/reference/protocol-spec/#bulk-strings
-    :param data:
-    :param encoding:
-    :return:
-    """
     if not isinstance(data, list):
         data = [data]
 
@@ -36,24 +30,28 @@ def handle_client(client_socket):
     running = True
     try:
         while running:
-            data = client_socket.recv(32)
+            data = client_socket.recv(1024)
 
             if not data:
                 break
 
             print("Received {!r}".format(data))
-            arr_size, *arr = [el for el in data.split(b"\r\n") if el]
-            if not arr:
+            elements = [el for el in data.split(b"\r\n") if el]
+            if not elements:
                 continue
-            print(f"Array size: {arr_size}")
-            print(f"Array content: {arr}")
 
-            if arr[0] == b"PING":
+            print(f"Elements: {elements}")
+
+            command = elements[1].decode('utf-8')
+            print(f"Command: {command}")
+
+            if command == "PING":
                 resp = parse_request("PONG")
                 print(f"Sending PONG response -> {resp}")
                 client_socket.sendall(resp)
-            elif arr[0] == b"ECHO":
-                resp = parse_request([el.decode("utf-8") for el in arr[1:]])
+            elif command == "ECHO":
+                message = elements[3].decode("utf-8")
+                resp = parse_request(message)
                 print(f"Response sent {resp}")
                 client_socket.sendall(resp)
             else:
