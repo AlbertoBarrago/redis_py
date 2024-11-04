@@ -63,14 +63,15 @@ def handle_client(client_socket):
                 key = elements[4].decode("utf-8")
                 print(f"Getting key {key}")
 
-                # Usa il metodo `get_elements_by_key` per ottenere il valore e gestire l'expiration
                 value = store.get_elements_by_key(key)
                 if value is not None:
                     resp = parse_request(value)
+                    client_socket.sendall(resp)
                     print(f"Sending stored value {value}")
                 else:
                     print(f"Key '{key}' not found or expired, sending null bulk string")
-                    client_socket.sendall(b"$-1\r\n")
+                    resp = parse_request(b"$-1\r\n")
+                    client_socket.sendall(resp)
             else:
                 print("Unsupported command")
                 error_resp = parse_request("ERROR Unsupported command")
