@@ -1,24 +1,14 @@
 """ Redi from scratch -> https://app.codecrafters.io/ """
-import socket  # noqa: F401
-import threading  # noqa: F401
+import socket
+import threading
 
 
 def parse_request(data, encoding="utf-8"):
-    if not isinstance(data, list):
-        data = [data]
-
     separator = "\r\n"
-    size = len(data)
-    encoded = []
-
-    for args in data:
-        encoded.append(f"${len(args)}")
-        encoded.append(args)
-    if size > 1:
-        encoded.insert(0, f"*{size}")
-
+    # Simple String response should start with "+"
+    encoded = f"+{data}{separator}"
     print(f"encoded: {encoded}")
-    return (separator.join(encoded) + separator).encode(encoding=encoding)
+    return encoded.encode(encoding=encoding)
 
 
 def handle_client(client_socket):
@@ -50,6 +40,7 @@ def handle_client(client_socket):
                 print(f"Sending PONG response -> {resp}")
                 client_socket.sendall(resp)
             elif command == "ECHO":
+                # Decodifica e prepara i dati per l'eco
                 message = elements[3].decode("utf-8")
                 resp = parse_request(message)
                 print(f"Response sent {resp}")
