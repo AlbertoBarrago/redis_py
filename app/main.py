@@ -12,11 +12,6 @@ def parse_request(data, encoding="utf-8"):
 
 
 def handle_client(client_socket):
-    """
-    Handle client request, parsing response and sending it back.
-    :param client_socket:
-    :return:
-    """
     running = True
     try:
         while running:
@@ -40,13 +35,14 @@ def handle_client(client_socket):
                 print(f"Sending PONG response -> {resp}")
                 client_socket.sendall(resp)
             elif command == "ECHO":
-                # Decodifica e prepara i dati per l'eco
                 message = elements[3].decode("utf-8")
                 resp = parse_request(message)
                 print(f"Response sent {resp}")
                 client_socket.sendall(resp)
             else:
                 print("Unsupported command")
+                error_resp = parse_request("ERROR Unsupported command")
+                client_socket.sendall(error_resp)
                 running = False
     except (ConnectionResetError, BrokenPipeError):
         print("Client disconnected")
