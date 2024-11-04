@@ -1,4 +1,3 @@
-""" Redi from scratch -> https://app.codecrafters.io/ """
 import socket  # noqa: F401
 import threading  # noqa: F401
 
@@ -27,29 +26,40 @@ def handle_client(client_socket):
     :param client_socket:
     :return:
     """
-    while True:
-        data = client_socket.recv(32)
+    running = True
+    try:
+        while running:
+            data = client_socket.recv(32)
 
-        if not data:
-            break
+            if not data:
+                break
 
-        print("Received {!r}".format(data))
-        arr_size, *arr = data.split(b"\r\n")
-        print(f"Array size: {arr_size}")
-        print(f"Array content: {arr}")
+            print("Received {!r}".format(data))
+            arr_size, *arr = [el for el in data.split(b"\r\n") if el]
+            print(f"Array size: {arr_size}")
+            print(f"Array content: {arr}")
 
-        if arr[1] == b"ping":
-            resp = parse_request("PONG")
-            print(f"Sending PONG reps ->, {resp}")
-            print(f"Response sent {resp}")
-            client_socket.sendAll(resp)
-        elif arr[1] == b"echo":
-            resp = parse_request([el.decode("utf-8") for el in arr[3::2]])
-            print(f"Response sent {resp}")
-            client_socket.sendAll(resp)
-        else:
-            break
-        client_socket.close()
+            if arr[0] == b"PING":
+                resp = parse_request("PONG")
+                print(f"Sending PONG response -> {resp}")
+                client_socket.sendall(resp)
+            elif arr[0] == b"ECHO":
+                # Decodifica e prepara i dati per l'eco
+                resp = parse_request([el.decode("utf-8") for el in arr[1:]])
+                print(f"Response sent {resp}")
+                client_socket.sendall(resp)
+            else:
+                print("Unsupported command")
+                running = False
+    except (ConnectionResetError, BrokenPipeError):
+        print("Client disconnected")
+    except OSError as e:
+        print(f"OSError: {e}")
+    finally:
+        try:
+            client_socket.close()
+        except OSError as e:
+            print(f"Error closing socket: {e}")
 
 
 def main():
