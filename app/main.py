@@ -3,7 +3,7 @@ import socket
 import threading
 
 from app.services.request_handling import RequestService
-from app.store.global_store import GlobalStore
+from app.store.global_store import GlobalStore, parse_key
 
 store = GlobalStore()
 
@@ -18,11 +18,8 @@ def main():
     parser.add_argument('--dir', type=str)
     parser.add_argument('--dbfilename', type=str)
     args = parser.parse_args()
-    print("Server started on localhost:6379")
     path = args.dir if args.dir else ""
     dbfilename = args.dbfilename if args.dbfilename else ""
-
-    print("Server started on localhost:6379")
     request_service = RequestService(store=store, dir_path=path, dbfilename=dbfilename)
     try:
         while True:

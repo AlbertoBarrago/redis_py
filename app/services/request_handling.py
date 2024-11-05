@@ -1,3 +1,6 @@
+from app.store.global_store import parse_key
+
+
 class RequestService:
     def __init__(self, data=None, encoding="utf-8", store=None, dir_path=None, dbfilename=None):
         self.data = data
@@ -42,13 +45,13 @@ class RequestService:
         return elements
 
     def handle_client(self, client_socket):
-        print(f"Config values: {self.config}")
         try:
             while self.running:
                 self.data = client_socket.recv(1024)
 
                 if not self.data:
                     break
+
 
                 print("Received {!r}".format(self.data))
                 elements = self.parse_resp_array(self.data)
@@ -92,7 +95,6 @@ class RequestService:
                         resp = b"$-1\r\n"
                         client_socket.sendall(resp)
                         print(f"Key '{key}' not found, sending null bulk string")
-
                 elif command == "CONFIG" and len(elements):
                     config_param = elements[2].lower()
                     if config_param == "dir":
@@ -103,6 +105,17 @@ class RequestService:
                     else:
                         response = b"*0\r\n"
                     client_socket.sendall(response)
+                elif command == "KEYS":
+                    arg = elements[1]
+                    result = self.store.load_rdb_file(
+                        self.config.get('dir'),
+                        self.config.get('dbfilename')
+                    )
+                    print(result)
+                    if arg == "*":
+                        keys = self.store.get_all_keys()
+                        response = self.parse_array(keys)
+                        client_socket.sendall(response)
             else:
                 error_resp = self.parse_request("ERROR Unsupported command")
                 client_socket.sendall(error_resp)
