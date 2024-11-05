@@ -82,17 +82,18 @@ class RequestService:
                     config_param = elements[3].decode('utf-8')
 
                     if config_param == "dir":
-                        resp = f"$3\r\n{self.dir}\r\n"
+                        resp = f"*2\r\n$3\r\n{config_param}\r\n${len(self.dir_path)}\r\n{self.dir_path}\r\n"
                     elif config_param == "dbfilename":
-                        resp = f"${len(self.dbfilename)}\r\n{self.dbfilename}\r\n"
+                        resp = f"*2\r\n$9\r\n{config_param}\r\n${len(self.dbfilename)}\r\n{self.dbfilename}\r\n"
                     else:
-                        resp = "$-1\r\n"
+                        resp = "*0\r\n"
 
                     client_socket.sendall(resp.encode('utf-8'))
-                else:
-                    error_resp = self.parse_request("ERROR Unsupported command")
-                    client_socket.sendall(error_resp)
-                    self.running = False
+
+            else:
+                error_resp = self.parse_request("ERROR Unsupported command")
+                client_socket.sendall(error_resp)
+                self.running = False
 
         except (ConnectionResetError, BrokenPipeError):
             print("Client disconnected")
