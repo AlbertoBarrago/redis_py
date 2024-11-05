@@ -1,7 +1,11 @@
-from app.store.global_store import parse_key
-
-
 class RequestService:
+    """
+     Request handling service
+     :param data - incoming data
+     :param store - store object
+     :param dir_path - rdb path
+     :param dbfilename - rdb filename
+    """
     def __init__(self, data=None, encoding="utf-8", store=None, dir_path=None, dbfilename=None):
         self.data = data
         self.encoding = encoding
@@ -52,7 +56,6 @@ class RequestService:
                 if not self.data:
                     break
 
-
                 print("Received {!r}".format(self.data))
                 elements = self.parse_resp_array(self.data)
                 print(f"Elements: {elements}")
@@ -64,58 +67,60 @@ class RequestService:
                     resp = self.parse_request("PONG")
                     print(f"Sending PONG response -> {resp}")
                     client_socket.sendall(resp)
-                elif command == "ECHO":
-                    message = elements[1]
-                    resp = self.parse_request(message)
-                    print(f"Response sent {resp}")
-                    client_socket.sendall(resp)
-                elif command == "SET":
-                    key = elements[1]
-                    value = elements[2]
-                    expiration = None
-                    if len(elements) > 4:
-                        if elements[3].lower() == 'ex':
-                            expiration = int(elements[4]) * 1000
-                        elif elements[3].lower() == 'px':
-                            expiration = int(elements[4])
-                    print(f"Setting key {key} with value {value} and expiration {expiration}")
 
-                    self.store.set_elements(key, value, expiration / 1000 if expiration else None)
-                    resp = self.parse_request("OK")
-                    client_socket.sendall(resp)
-                elif command == "GET":
-                    key = elements[1]
-                    print(f"Getting key {key}")
-                    value = self.store.get_elements_by_key(key)
-                    if value is not None:
-                        resp = self.parse_request(value)
+                match command:
+                    case "ECHO":
+                        message = elements[1]
+                        resp = self.parse_request(message)
+                        print(f"Response sent {resp}")
                         client_socket.sendall(resp)
-                        print(f"Sending stored value {value}")
-                    else:
-                        resp = b"$-1\r\n"
+                    case "SET":
+                        key = elements[1]
+                        value = elements[2]
+                        expiration = None
+                        if len(elements) > 4:
+                            if elements[3].lower() == 'ex':
+                                expiration = int(elements[4]) * 1000
+                            elif elements[3].lower() == 'px':
+                                expiration = int(elements[4])
+                        print(f"Setting key {key} with value {value} and expiration {expiration}")
+
+                        self.store.set_elements(key, value, expiration / 1000 if expiration else None)
+                        resp = self.parse_request("OK")
                         client_socket.sendall(resp)
-                        print(f"Key '{key}' not found, sending null bulk string")
-                elif command == "CONFIG" and len(elements):
-                    config_param = elements[2].lower()
-                    if config_param == "dir":
-                        response = self.parse_array([config_param, self.config.get('dir')])
-                    elif config_param == "dbfilename":
-                        response = self.parse_array(
-                            [config_param, self.config.get('dbfilename')])
-                    else:
-                        response = b"*0\r\n"
-                    client_socket.sendall(response)
-                elif command == "KEYS":
-                    arg = elements[1]
-                    result = self.store.load_rdb_file(
-                        self.config.get('dir'),
-                        self.config.get('dbfilename')
-                    )
-                    print(result)
-                    if arg == "*":
-                        keys = self.store.get_all_keys()
-                        response = self.parse_array(keys)
-                        client_socket.sendall(response)
+                    case "GET":
+                        key = elements[1]
+                        print(f"Getting key {key}")
+                        value = self.store.get_elements_by_key(key)
+                        if value is not None:
+                            resp = self.parse_request(value)
+                            client_socket.sendall(resp)
+                            print(f"Sending stored value {value}")
+                        else:
+                            resp = b"$-1\r\n"
+                            client_socket.sendall(resp)
+                            print(f"Key '{key}' not found, sending null bulk string")
+                        if command == "CONFIG" and len(elements):
+                            config_param = elements[2].lower()
+                            if config_param == "dir":
+                                response = self.parse_array([config_param, self.config.get('dir')])
+                            elif config_param == "dbfilename":
+                                response = self.parse_array(
+                                    [config_param, self.config.get('dbfilename')])
+                            else:
+                                response = b"*0\r\n"
+                            client_socket.sendall(response)
+                    case "KEYS":
+                        arg = elements[1]
+                        result = self.store.load_rdb_file(
+                            self.config.get('dir'),
+                            self.config.get('dbfilename')
+                        )
+                        print(result)
+                        if arg == "*":
+                            keys = self.store.get_all_keys()
+                            response = self.parse_array(keys)
+                            client_socket.sendall(response)
             else:
                 error_resp = self.parse_request("ERROR Unsupported command")
                 client_socket.sendall(error_resp)

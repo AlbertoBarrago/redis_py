@@ -27,6 +27,9 @@ def parse_key(rdb_content):
 
 
 class GlobalStore:
+    """
+    GlobalStore class
+    """
     def __init__(self):
         self.elements = {}
 
