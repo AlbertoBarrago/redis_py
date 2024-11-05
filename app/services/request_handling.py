@@ -35,7 +35,7 @@ class RequestService:
             i = 1
             while i < len(lines) and len(elements) < num_elements:
                 if lines[i] and lines[i][0] == ord('$'):
-                    str_len = int(lines[i][1:])
+                    int(lines[i][1:])
                     i += 1
                     elements.append(lines[i].decode(self.encoding))
                 i += 1
