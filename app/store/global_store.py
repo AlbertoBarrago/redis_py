@@ -55,7 +55,7 @@ class GlobalStore:
         items = collector.items
         keys = collector.keys
 
-        decoded_items = [(key.decode('utf-8'), value.decode('utf-8')) for key, value in items]
+        decoded_items = [(key.decode('utf-8'), value.decode('utf-8'), int(expiry.timestamp() * 1000)) for key, value, expiry in items]
         decoded_keys = [key.decode('utf-8') for key in keys]
 
         print(f"Extracted values: {decoded_items}")
@@ -68,5 +68,5 @@ class GlobalStore:
             rdb_file_path = os.path.join(dir_path, filename)
             if rdb_file_path and os.path.exists(rdb_file_path):
                 keys = self.parse_key(rdb_file_path)
-                for key, value in keys:
-                    self.set_elements(key, value or None)
+                for key, value, expiry in keys:
+                    self.set_elements(key, value or None, expiry or None)

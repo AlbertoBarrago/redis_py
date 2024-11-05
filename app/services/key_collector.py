@@ -9,4 +9,4 @@ class KeyCollector(RdbCallback):
 
     def set(self, key, value, expiry, info):
         self.keys.append(key)
-        self.items.append((key,value))
+        self.items.append((key,value,expiry))
