@@ -1,15 +1,14 @@
 import os
+import re
 import time
 
 
 def remove_bytes_char(bytes_char):
-    if bytes_char.startswith("x"):
-        return bytes_char[3:]
-    elif bytes_char.startswith("t"):
-        return bytes_char[2:]
+    return re.sub(r'^[xnt]|[0-9]', '', bytes_char)
 
 
 def parse_key(rdb_content):
+    print(f"rdb_content -> {rdb_content}")
     split_content = rdb_content.split("\\")
     resize_key = split_content.index("xfb")
 
@@ -22,7 +21,8 @@ def parse_key(rdb_content):
     key = remove_bytes_char(key_bytes)
     value = remove_bytes_char(value_bytes)
 
-    print(f"Key: {key} Value: {value}")
+    print(f"Key: {key}")
+    print(f"Value: {value}")
     return key, value
 
 
@@ -67,6 +67,7 @@ class GlobalStore:
                     rdb_content = str(f.read())
                     if rdb_content:
                         key = parse_key(rdb_content)
+                        print(f"key -> {key}")
                         self.set_elements(key[0], key[1])
                         return "*1\r\n${}\r\n{}\r\n".format(len(key), key).encode()
 

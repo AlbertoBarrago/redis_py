@@ -68,6 +68,13 @@ class RequestService:
                     print(f"Sending PONG response -> {resp}")
                     client_socket.sendall(resp)
 
+                if self.config.get('dir')  is not None or self.config.get('dbfilename') is not None:
+                    result = self.store.load_rdb_file(
+                        self.config.get('dir'),
+                        self.config.get('dbfilename')
+                    )
+                    print(f"Extracted from dba -> {result}")
+
                 match command:
                     case "ECHO":
                         message = elements[1]
@@ -100,23 +107,18 @@ class RequestService:
                             resp = b"$-1\r\n"
                             client_socket.sendall(resp)
                             print(f"Key '{key}' not found, sending null bulk string")
-                        if command == "CONFIG" and len(elements):
-                            config_param = elements[2].lower()
-                            if config_param == "dir":
-                                response = self.parse_array([config_param, self.config.get('dir')])
-                            elif config_param == "dbfilename":
-                                response = self.parse_array(
-                                    [config_param, self.config.get('dbfilename')])
-                            else:
-                                response = b"*0\r\n"
-                            client_socket.sendall(response)
+                    case "CONFIG":
+                        config_param = elements[2].lower()
+                        if config_param == "dir":
+                            response = self.parse_array([config_param, self.config.get('dir')])
+                        elif config_param == "dbfilename":
+                            response = self.parse_array(
+                                [config_param, self.config.get('dbfilename')])
+                        else:
+                            response = b"*0\r\n"
+                        client_socket.sendall(response)
                     case "KEYS":
                         arg = elements[1]
-                        result = self.store.load_rdb_file(
-                            self.config.get('dir'),
-                            self.config.get('dbfilename')
-                        )
-                        print(result)
                         if arg == "*":
                             keys = self.store.get_all_keys()
                             response = self.parse_array(keys)
