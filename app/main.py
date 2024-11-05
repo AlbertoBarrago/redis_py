@@ -1,3 +1,4 @@
+import argparse
 import socket
 import threading
 
@@ -12,9 +13,16 @@ def main():
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind(("localhost", 6379))
     server_socket.listen()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dir', type=str)
+    parser.add_argument('--dbfilename', type=str)
+    args = parser.parse_args()
     print("Server started on localhost:6379")
+    path = args.dir if args.dir else ""  # Inizializza path
+    dbfilename = args.dbfilename if args.dbfilename else "db.json"  # Inizializza dbfilename
 
-    request_service = RequestService(store=store)
+    print("Server started on localhost:6379")
+    request_service = RequestService(store=store, dir_path=path or "", dbfilename=dbfilename or "db.json")
     try:
         while True:
             client_socket, addr = server_socket.accept()
