@@ -2,28 +2,12 @@ import os
 import re
 import time
 
+from app.services.key_collector import KeyCollector
+from app.services.parser_rdb import RdbParser
+
 
 def remove_bytes_char(bytes_char):
     return re.sub(r'^[xnt]|[0-9]', '', bytes_char)
-
-
-def parse_key(rdb_content):
-    print(f"rdb_content -> {rdb_content}")
-    split_content = rdb_content.split("\\")
-    resize_key = split_content.index("xfb")
-
-    key_index = resize_key + 4
-    value_index = key_index + 1
-
-    key_bytes = split_content[key_index]
-    value_bytes = split_content[value_index]
-
-    key = remove_bytes_char(key_bytes)
-    value = remove_bytes_char(value_bytes)
-
-    print(f"Key: {key}")
-    print(f"Value: {value}")
-    return key, value
 
 
 class GlobalStore:
@@ -39,6 +23,7 @@ class GlobalStore:
         print(f"Set key '{key}' to value '{value}' with expiration time {expiration_time}")
 
     def get_elements_by_key(self, key):
+        print(f"Elements {self.elements}")
         if key not in self.elements:
             return None
 
@@ -59,16 +44,29 @@ class GlobalStore:
                 valid_keys.append(key)
         return valid_keys
 
+
+    def parse_key(self, rdb_file_path):
+        collector = KeyCollector()
+        parser = RdbParser(collector)
+        print(f"Parsing RDB content...")
+
+        parser.parse(rdb_file_path)
+
+        items = collector.items
+        keys = collector.keys
+
+        decoded_items = [(key.decode('utf-8'), value.decode('utf-8')) for key, value in items]
+        decoded_keys = [key.decode('utf-8') for key in keys]
+
+        print(f"Extracted values: {decoded_items}")
+        print(f"Extracted keys: {decoded_keys}")
+
+        return decoded_items
+
     def load_rdb_file(self, dir_path, filename):
         if dir_path and filename:
             rdb_file_path = os.path.join(dir_path, filename)
             if rdb_file_path and os.path.exists(rdb_file_path):
-                with open(rdb_file_path, 'rb') as f:
-                    rdb_content = str(f.read())
-                    if rdb_content:
-                        key = parse_key(rdb_content)
-                        print(f"key -> {key}")
-                        self.set_elements(key[0], key[1])
-                        return "*1\r\n${}\r\n{}\r\n".format(len(key), key).encode()
-
-        return "*0\r\n".encode()
+                keys = self.parse_key(rdb_file_path)
+                for key, value in keys:
+                    self.set_elements(key, value or None)

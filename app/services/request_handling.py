@@ -69,11 +69,10 @@ class RequestService:
                     client_socket.sendall(resp)
 
                 if self.config.get('dir')  is not None or self.config.get('dbfilename') is not None:
-                    result = self.store.load_rdb_file(
+                    self.store.load_rdb_file(
                         self.config.get('dir'),
                         self.config.get('dbfilename')
                     )
-                    print(f"Extracted from dba -> {result}")
 
                 match command:
                     case "ECHO":
