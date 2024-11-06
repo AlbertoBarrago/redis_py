@@ -59,16 +59,16 @@ class RequestService:
                 if not self.data:
                     break
 
-                print("Received {!r}".format(self.data))
+                #print("Received {!r}".format(self.data))
                 elements = self.parse_resp_array(self.data)
-                print(f"Elements: {elements}")
+                #print(f"Elements: {elements}")
 
                 command = elements[0].upper()
-                print(f"Command: {command}")
+                #print(f"Command: {command}")
 
                 if command == "PING" or elements == "[PING]":
                     resp = self.parse_request("PONG")
-                    print(f"Sending PONG response -> {resp}")
+                    #print(f"Sending PONG response -> {resp}")
                     client_socket.sendall(resp)
 
                 if self.config.get('dir')  is not None or self.config.get('dbfilename') is not None:
