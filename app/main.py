@@ -2,7 +2,7 @@ import argparse
 import socket
 import threading
 
-from app.services.request_handling import RequestService
+from app.services.req_handler import RequestService
 from app.store.global_store import GlobalStore
 
 store = GlobalStore()

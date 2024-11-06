@@ -1,3 +1,6 @@
+import time
+
+
 class RequestService:
     """
      Request handling service
@@ -88,10 +91,10 @@ class RequestService:
                             if elements[3].lower() == 'ex':
                                 expiration = int(elements[4]) * 1000
                             elif elements[3].lower() == 'px':
-                                expiration = int(elements[4])
+                                expiration = int(elements[4]) + int(time.time() * 1000)
                         print(f"Setting key {key} with value {value} and expiration {expiration}")
 
-                        self.store.set_elements(key, value, expiration / 1000 if expiration else None)
+                        self.store.set_elements(key, value, expiration if expiration else None)
                         resp = self.parse_request("OK")
                         client_socket.sendall(resp)
                     case "GET":
@@ -103,9 +106,10 @@ class RequestService:
                             client_socket.sendall(resp)
                             print(f"Sending stored value {value}")
                         else:
-                            resp = b"$-1\r\n"
-                            client_socket.sendall(resp)
                             print(f"Key '{key}' not found, sending null bulk string")
+                            resp = b"$-1\r\n"
+                            print(f"sending this resp {resp}")
+                            client_socket.sendall(resp)
                     case "CONFIG":
                         config_param = elements[2].lower()
                         if config_param == "dir":

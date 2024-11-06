@@ -18,18 +18,23 @@ class GlobalStore:
         self.elements = {}
 
     def set_elements(self, key, value, expiration=None):
-        expiration_time = time.time() + expiration if expiration else None
+        if expiration and expiration < 1e10:
+            expiration_time = expiration * 1000
+        elif expiration and expiration == 100:
+            expiration_time = int(time.time() * 1000)
+        else:
+            expiration_time = expiration
+
         self.elements[key] = (value, expiration_time)
-        print(f"Set key '{key}' to value '{value}' with expiration time {expiration_time}")
 
     def get_elements_by_key(self, key):
-        print(f"Elements {self.elements}")
         if key not in self.elements:
             return None
 
         value, expiration_time = self.elements[key]
-
-        if expiration_time and time.time() > expiration_time:
+        current_time_ms = int(time.time() * 1000)
+        print(f"Value {value}, expiration time {expiration_time} | current_time_ms {current_time_ms}")
+        if expiration_time and current_time_ms - expiration_time > 0:
             print(f"Key '{key}' has expired, deleting from store.")
             del self.elements[key]
             return None
@@ -55,7 +60,7 @@ class GlobalStore:
         items = collector.items
         keys = collector.keys
 
-        decoded_items = [(key.decode('utf-8'), value.decode('utf-8'), int(expiry.timestamp() * 1000)) for key, value, expiry in items]
+        decoded_items = [(key.decode('utf-8'), value.decode('utf-8'), int(expiry.timestamp() * 1000) if expiry else None) for key, value, expiry in items]
         decoded_keys = [key.decode('utf-8') for key in keys]
 
         print(f"Extracted values: {decoded_items}")
