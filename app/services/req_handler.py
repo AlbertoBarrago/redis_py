@@ -52,6 +52,22 @@ class RequestService:
                 i += 1
         return elements
 
+    def handle_info_command(self, section):
+        if section == "replication":
+            info = "# Replication\r\n"
+            info += "role:master\r\n"
+            info += "connected_slaves:0\r\n"
+            info += "master_replid:8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb\r\n"
+            info += "master_repl_offset:0\r\n"
+            info += "second_repl_offset:-1\r\n"
+            info += "repl_backlog_active:0\r\n"
+            info += "repl_backlog_size:1048576\r\n"
+            info += "repl_backlog_first_byte_offset:0\r\n"
+            info += "repl_backlog_histlen:0\r\n"
+            bulk_string = f"${len(info)}\r\n{info}\r\n"
+            return bulk_string
+        return ""
+
     def handle_client(self, client_socket):
         try:
             while self.running:
@@ -127,6 +143,11 @@ class RequestService:
                             keys = self.store.get_all_keys()
                             response = self.parse_array(keys)
                             client_socket.sendall(response)
+                    case "INFO":
+                        arg = elements[1]
+                        section = arg if len(arg) > 1 else ""
+                        response = self.handle_info_command(section)
+                        client_socket.sendall(response.encode(self.encoding))
             else:
                 error_resp = self.parse_request("ERROR Unsupported command")
                 client_socket.sendall(error_resp)
