@@ -7,18 +7,31 @@ from app.store.global_store import GlobalStore
 
 store = GlobalStore()
 
+def perform_handshake(host, port):
+    master_socket = socket.create_connection((host, port))
+    master_socket.sendall(str.encode("*1\r\n$4\r\nping\r\n"))
+
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Start a simple socket server.")
     parser.add_argument('--dir', type=str)
     parser.add_argument('--dbfilename', type=str)
     parser.add_argument('--port', type=int, default=6379, help="Porta su cui avviare il server Redis")
     parser.add_argument('--replicaof', type=str)
     args = parser.parse_args()
 
+    if args.replicaof:
+        host, port = args.replicaof.split()
+        port = int(port)
+        print(
+            f"Waiting for handshake with master server {host}:{port}..."
+        )
+        perform_handshake(host, port)
+
     path = args.dir if args.dir else ""
     dbfilename = args.dbfilename if args.dbfilename else ""
     port = args.port
+
     replica = "master"
     if args.replicaof:
         replica = "slave"
