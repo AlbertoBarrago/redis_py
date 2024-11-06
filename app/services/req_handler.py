@@ -9,7 +9,7 @@ class RequestService:
      :param dir_path - rdb path
      :param dbfilename - rdb filename
     """
-    def __init__(self, data=None, encoding="utf-8", store=None, dir_path=None, dbfilename=None):
+    def __init__(self, data=None, encoding="utf-8", store=None, dir_path=None, dbfilename=None, port=None):
         self.data = data
         self.encoding = encoding
         self.running = True
@@ -18,6 +18,7 @@ class RequestService:
             "dir": dir_path,
             "dbfilename": dbfilename,
         }
+        self.port = port
 
     def parse_request(self, data):
         separator = "\r\n"
