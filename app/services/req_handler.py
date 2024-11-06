@@ -9,7 +9,7 @@ class RequestService:
      :param dir_path - rdb path
      :param dbfilename - rdb filename
     """
-    def __init__(self, data=None, encoding="utf-8", store=None, dir_path=None, dbfilename=None, port=None):
+    def __init__(self, data=None, encoding="utf-8", store=None, dir_path=None, dbfilename=None, port=None, replica=None):
         self.data = data
         self.encoding = encoding
         self.running = True
@@ -19,6 +19,7 @@ class RequestService:
             "dbfilename": dbfilename,
         }
         self.port = port
+        self.replica = replica
 
     def parse_request(self, data):
         separator = "\r\n"
@@ -55,7 +56,7 @@ class RequestService:
     def handle_info_command(self, section):
         if section == "replication":
             info = "# Replication\r\n"
-            info += "role:master\r\n"
+            info += f"role:{self.replica}\r\n"
             info += "connected_slaves:0\r\n"
             info += "master_replid:8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb\r\n"
             info += "master_repl_offset:0\r\n"
