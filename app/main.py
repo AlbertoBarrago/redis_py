@@ -23,7 +23,9 @@ def main():
     if args.replicaof:
         replica = "slave"
 
-    print(f"{args.replicaof}")
+    print(f"Server:{dbfilename} is running on port {port}")
+    print(f"Replica is {replica}")
+    print(f"Waiting for connections...")
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
